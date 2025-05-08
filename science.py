@@ -7,7 +7,7 @@ import numpy as np
 import easyocr
 from langchain_community.document_loaders import PyPDFLoader, TextLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import Chroma
+from langchain_community.vectorstores import FAISS
 from langchain.chains import create_retrieval_chain, create_history_aware_retriever
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_community.chat_message_histories import StreamlitChatMessageHistory
@@ -71,7 +71,7 @@ def process_file(file):
             model_kwargs={"device": "cpu"},
             encode_kwargs={'normalize_embeddings': False}
         )
-        vector_store = Chroma.from_documents(chunks, embeddings)
+        vector_store = FAISS.from_documents(chunks, embeddings)
         retriever = vector_store.as_retriever()
 
         question_answer_chain = create_retrieval_chain(retriever, qa_prompt)
