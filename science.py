@@ -45,6 +45,8 @@ def process_file(file):
             f.write(file.read())
 
         ext = os.path.splitext(file_path)[1].lower()
+        import pytesseract
+        pytesseract.pytesseract.tesseract_cmd = "/usr/bin/tesseract"
         if ext == ".pdf":
             loader = PyPDFLoader(file_path)
             docs = loader.load()
