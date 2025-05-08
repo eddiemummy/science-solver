@@ -1,5 +1,3 @@
-# Güncellenmiş versiyon: Tesseract yerine EasyOCR kullanan versiyon
-
 import streamlit as st
 import os
 from PIL import Image
@@ -23,21 +21,22 @@ llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", google_api_key=GOOGLE_KEY
 history = StreamlitChatMessageHistory()
 
 contextualize_prompt = ChatPromptTemplate.from_messages([
-    ("system", """Given a chat history and the latest user question which might reference chat history, 
-    formulate a standalone question. Do NOT answer it."""),
+    ("system", "Given a chat history and the latest user question which might reference chat history, formulate a standalone question. Do NOT answer it."),
     MessagesPlaceholder("chat_history"),
     ("human", "{input}"),
 ])
 
 qa_prompt = ChatPromptTemplate.from_messages([
-    ("system", "You are a math tutor. Use the following context to solve the problem step-by-step. "
-               "Do not skip steps. Show calculations where necessary.\n\n{context}"),
+    ("system", "You are a math tutor. Use the following context to solve the problem step-by-step. Do not skip steps. Show calculations where necessary.\n\n{context}"),
     ("human", "{input}"),
 ])
 
 def clear_history():
     if "langchain_messages" in st.session_state:
         del st.session_state["langchain_messages"]
+
+if "crc" not in st.session_state:
+    st.session_state.crc_ready = False
 
 def process_file(file):
     with st.spinner("📄 Processing file..."):
@@ -46,7 +45,6 @@ def process_file(file):
             f.write(file.read())
 
         ext = os.path.splitext(file_path)[1].lower()
-
         if ext == ".pdf":
             loader = PyPDFLoader(file_path)
             docs = loader.load()
@@ -87,6 +85,7 @@ def process_file(file):
         )
 
         st.session_state.crc = crc
+        st.session_state.crc_ready = True
         st.success("✅ Document processed successfully.")
 
 st.title("🧠 Math Solver – Adım Adım Çözen Asistan")
@@ -102,19 +101,20 @@ if question:
     with st.chat_message("user"):
         st.markdown(question)
 
-        if "crc" in st.session_state:
-            response = st.session_state.crc.invoke(
-                {"input": question},
-                config={"configurable": {"session_id": "math-session"}}
-            )
+    if st.session_state.get("crc_ready", False):
+        response = st.session_state.crc.invoke(
+            {"input": question},
+            config={"configurable": {"session_id": "math-session"}}
+        )
 
-            answer_text = getattr(response, "content", str(response))
-            
-            with st.chat_message("assistant"):
-                st.markdown(answer_text)
-            if isinstance(response, dict) and "context" in response:
-                with st.expander("📄 Kullanılan İçerik"):
-                    for doc in response["context"]:
-                        st.markdown(doc.page_content)
-else:
-    st.error("📌 Önce bir dosya yüklemelisiniz.")
+        answer_text = getattr(response, "content", str(response))
+
+        with st.chat_message("assistant"):
+            st.markdown(answer_text)
+
+        if isinstance(response, dict) and "context" in response:
+            with st.expander("📄 Kullanılan İçerik"):
+                for doc in response["context"]:
+                    st.markdown(doc.page_content)
+    else:
+        st.error("📌 Önce bir dosya yüklemelisiniz.")
