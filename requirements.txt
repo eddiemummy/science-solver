@@ -1,5 +1,4 @@
 streamlit
-easyocr
 Pillow
 langchain
 langchain-community
@@ -11,3 +10,6 @@ sentence-transformers
 faiss-cpu
 python-decouple
 protobuf==3.20.3
+torch==2.1.0
+easyocr==1.7.1
+
