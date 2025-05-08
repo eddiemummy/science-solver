@@ -10,3 +10,5 @@ sentence-transformers
 python-decouple
 faiss-cpu
 protobuf==3.20.*
+torch==2.1.0
+langchain-huggingface

@@ -1,3 +1,9 @@
+import asyncio
+try:
+    asyncio.get_running_loop()
+except RuntimeError:
+    asyncio.set_event_loop(asyncio.new_event_loop())
+
 import streamlit as st
 import os
 from PIL import Image
@@ -11,7 +17,7 @@ from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_community.chat_message_histories import StreamlitChatMessageHistory
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.embeddings import HuggingFaceEmbeddings
+from langchain_huggingface.embeddings.huggingface import HuggingFaceEmbeddings
 from langchain_core.documents import Document
 from decouple import config
 
@@ -50,7 +56,7 @@ def process_file(file):
             docs = loader.load()
         elif ext in [".jpg", ".jpeg", ".png"]:
             image = Image.open(file_path).convert("RGB")
-            reader = easyocr.Reader(['en'], gpu=False)
+            reader = easyocr.Reader(['tr', 'en'], gpu=False)
             result = reader.readtext(np.array(image), detail=0)
             text = "\n".join(result)
             docs = [Document(page_content=text)]
