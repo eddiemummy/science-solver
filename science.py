@@ -1,7 +1,10 @@
+# Güncellenmiş versiyon: Tesseract yerine EasyOCR kullanan versiyon
+
 import streamlit as st
 import os
 from PIL import Image
-import pytesseract
+import numpy as np
+import easyocr
 from langchain_community.document_loaders import PyPDFLoader, TextLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
@@ -14,11 +17,9 @@ from langchain.embeddings import HuggingFaceEmbeddings
 from langchain_core.documents import Document
 from decouple import config
 
-
 GOOGLE_KEY = config("GOOGLE_GEMINI_KEY")
 
 llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", google_api_key=GOOGLE_KEY)
-
 history = StreamlitChatMessageHistory()
 
 contextualize_prompt = ChatPromptTemplate.from_messages([
@@ -45,14 +46,15 @@ def process_file(file):
             f.write(file.read())
 
         ext = os.path.splitext(file_path)[1].lower()
-        import pytesseract
-        pytesseract.pytesseract.tesseract_cmd = "/usr/bin/tesseract"
+
         if ext == ".pdf":
             loader = PyPDFLoader(file_path)
             docs = loader.load()
         elif ext in [".jpg", ".jpeg", ".png"]:
-            image = Image.open(file_path)
-            text = pytesseract.image_to_string(image)
+            image = Image.open(file_path).convert("RGB")
+            reader = easyocr.Reader(['en'], gpu=False)
+            result = reader.readtext(np.array(image), detail=0)
+            text = "\n".join(result)
             docs = [Document(page_content=text)]
         elif ext == ".txt":
             loader = TextLoader(file_path)
@@ -114,6 +116,5 @@ if question:
                 with st.expander("📄 Kullanılan İçerik"):
                     for doc in response["context"]:
                         st.markdown(doc.page_content)
-
 else:
     st.error("📌 Önce bir dosya yüklemelisiniz.")
