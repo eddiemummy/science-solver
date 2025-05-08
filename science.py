@@ -17,7 +17,7 @@ from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_community.chat_message_histories import StreamlitChatMessageHistory
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_huggingface.embeddings.huggingface import HuggingFaceEmbeddings
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_core.documents import Document
 from decouple import config
 
